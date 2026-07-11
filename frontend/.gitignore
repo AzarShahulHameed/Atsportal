@@ -8,7 +8,6 @@ out/
 # Environment files — never commit real secrets
 .env
 .env.local
-.env.local.example
 .env.*.local
 
 # Vercel
