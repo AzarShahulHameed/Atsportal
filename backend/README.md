@@ -5,7 +5,7 @@
 npm install
 cp .env.example .env        # fill in DATABASE_URL, JWT_SECRET, Cloudinary keys
 npx prisma migrate dev --name init
-npx ts-node prisma/seed.ts  # creates admin@catapult.com / ChangeMe123!
+npx ts-node prisma/seed.ts  # creates the initial admin account — see prisma/seed.ts for the login, and change the password immediately after first login
 npm run start:dev
 ```
 
