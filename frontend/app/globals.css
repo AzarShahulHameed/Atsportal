@@ -1,0 +1,20 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=IBM+Plex+Mono:wght@500&display=swap');
+
+body {
+  background: #FAFAF9;
+  color: #17181C;
+}
+
+/* Visible keyboard focus everywhere — an ops tool gets used by keyboard a lot */
+:focus-visible {
+  outline: 2px solid #3730A3;
+  outline-offset: 2px;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  * { transition: none !important; animation: none !important; }
+}
