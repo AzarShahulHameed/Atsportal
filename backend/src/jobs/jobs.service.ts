@@ -9,15 +9,17 @@ export class JobsService {
   constructor(private prisma: PrismaService) {}
 
   // Public: only active postings, optionally filtered by region (a BOTH job
-  // shows on either regional page, matching the old site's behavior)
+  // shows on either regional page). Featured postings sort first, matching
+  // the old site's behavior. applicantCount is exposed publicly on purpose —
+  // parity with the old site, which showed it too.
   findAllActive(region?: Region) {
     return this.prisma.jobPosting.findMany({
       where: {
         isActive: true,
         ...(region ? { region: { in: [region, Region.BOTH] } } : {}),
       },
-      include: { company: true },
-      orderBy: { createdAt: 'desc' },
+      include: { company: true, _count: { select: { applications: true } } },
+      orderBy: [{ isFeatured: 'desc' }, { createdAt: 'desc' }],
     });
   }
 
@@ -44,6 +46,12 @@ export class JobsService {
         employmentType: dto.employmentType,
         region: dto.region,
         description: dto.description,
+        responsibilities: dto.responsibilities ?? [],
+        requirements: dto.requirements ?? [],
+        niceToHave: dto.niceToHave ?? [],
+        salaryRange: dto.salaryRange,
+        deadline: dto.deadline ? new Date(dto.deadline) : undefined,
+        isFeatured: dto.isFeatured ?? false,
         companyId: dto.companyId,
       },
     });
@@ -60,6 +68,12 @@ export class JobsService {
         ...(dto.employmentType !== undefined ? { employmentType: dto.employmentType } : {}),
         ...(dto.region !== undefined ? { region: dto.region } : {}),
         ...(dto.description !== undefined ? { description: dto.description } : {}),
+        ...(dto.responsibilities !== undefined ? { responsibilities: dto.responsibilities } : {}),
+        ...(dto.requirements !== undefined ? { requirements: dto.requirements } : {}),
+        ...(dto.niceToHave !== undefined ? { niceToHave: dto.niceToHave } : {}),
+        ...(dto.salaryRange !== undefined ? { salaryRange: dto.salaryRange } : {}),
+        ...(dto.deadline !== undefined ? { deadline: new Date(dto.deadline) } : {}),
+        ...(dto.isFeatured !== undefined ? { isFeatured: dto.isFeatured } : {}),
         ...(dto.companyId !== undefined ? { companyId: dto.companyId } : {}),
         ...(dto.isActive !== undefined ? { isActive: dto.isActive } : {}),
       },

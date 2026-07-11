@@ -58,6 +58,12 @@ export interface Job {
   employmentType: string;
   region: Region;
   description: string;
+  responsibilities: string[];
+  requirements: string[];
+  niceToHave: string[];
+  salaryRange?: string | null;
+  deadline?: string | null;
+  isFeatured: boolean;
   isActive: boolean;
   createdAt: string;
   companyId?: string | null;

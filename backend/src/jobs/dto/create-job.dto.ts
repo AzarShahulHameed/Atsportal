@@ -1,4 +1,4 @@
-import { IsString, IsNotEmpty, IsOptional, IsIn, IsEnum } from 'class-validator';
+import { IsString, IsNotEmpty, IsOptional, IsIn, IsEnum, IsArray, IsBoolean, IsDateString } from 'class-validator';
 import { Region } from '@prisma/client';
 
 export class CreateJobDto {
@@ -19,6 +19,24 @@ export class CreateJobDto {
 
   @IsString() @IsNotEmpty()
   description: string;
+
+  @IsOptional() @IsArray() @IsString({ each: true })
+  responsibilities?: string[];
+
+  @IsOptional() @IsArray() @IsString({ each: true })
+  requirements?: string[];
+
+  @IsOptional() @IsArray() @IsString({ each: true })
+  niceToHave?: string[];
+
+  @IsOptional() @IsString()
+  salaryRange?: string;
+
+  @IsOptional() @IsDateString()
+  deadline?: string;
+
+  @IsOptional() @IsBoolean()
+  isFeatured?: boolean;
 
   @IsString() @IsNotEmpty()
   companyId: string;

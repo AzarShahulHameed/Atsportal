@@ -14,6 +14,14 @@ export default function AdminJobsPage() {
   const [error, setError] = useState<string | null>(null);
   const [submitting, setSubmitting] = useState(false);
 
+  // Array fields (responsibilities/requirements/niceToHave) need their own
+  // state — a plain <form> can't collect a variable-length list of inputs
+  // through FormData the way it can a single named field.
+  const [responsibilities, setResponsibilities] = useState<string[]>(['']);
+  const [requirements, setRequirements] = useState<string[]>(['']);
+  const [niceToHave, setNiceToHave] = useState<string[]>(['']);
+  const [isFeatured, setIsFeatured] = useState(false);
+
   const load = useCallback(async () => {
     const token = await ensureFreshToken();
     if (!token) { window.location.href = '/login'; return; }
@@ -40,6 +48,13 @@ export default function AdminJobsPage() {
     await load();
   }
 
+  function resetArrayFields() {
+    setResponsibilities(['']);
+    setRequirements(['']);
+    setNiceToHave(['']);
+    setIsFeatured(false);
+  }
+
   async function handleCreate(e: FormEvent<HTMLFormElement>) {
     e.preventDefault();
     setError(null);
@@ -48,6 +63,7 @@ export default function AdminJobsPage() {
     try {
       const token = await ensureFreshToken();
       if (!token) { window.location.href = '/login'; return; }
+      const deadlineValue = fd.get('deadline') as string;
       await api.post('/jobs', {
         title: fd.get('title'),
         department: fd.get('department'),
@@ -56,9 +72,16 @@ export default function AdminJobsPage() {
         region: fd.get('region'),
         description: fd.get('description'),
         companyId: fd.get('companyId'),
+        responsibilities: responsibilities.map((r) => r.trim()).filter(Boolean),
+        requirements: requirements.map((r) => r.trim()).filter(Boolean),
+        niceToHave: niceToHave.map((r) => r.trim()).filter(Boolean),
+        salaryRange: (fd.get('salaryRange') as string) || undefined,
+        deadline: deadlineValue || undefined,
+        isFeatured,
       }, token);
       setShowForm(false);
       (e.target as HTMLFormElement).reset();
+      resetArrayFields();
       await load();
     } catch (err) {
       setError(err instanceof ApiError ? err.message : 'Could not create job posting.');
@@ -159,9 +182,27 @@ export default function AdminJobsPage() {
           </div>
           <div>
             <label className="block text-sm font-medium mb-1.5">Description</label>
-            <textarea name="description" required rows={6}
+            <textarea name="description" required rows={4}
                       className="w-full border border-line px-3 py-2 text-sm focus:border-accent" />
           </div>
+
+          <ArrayField label="Responsibilities" items={responsibilities} setItems={setResponsibilities} />
+          <ArrayField label="Requirements" items={requirements} setItems={setRequirements} />
+          <ArrayField label="Nice to have" items={niceToHave} setItems={setNiceToHave} />
+
+          <div className="grid sm:grid-cols-2 gap-4">
+            <Input label="Salary range (optional)" name="salaryRange" placeholder="e.g. AED 15,000 – 22,000/month" />
+            <div>
+              <label className="block text-sm font-medium mb-1.5">Application deadline (optional)</label>
+              <input type="date" name="deadline" className="w-full border border-line px-3 py-2 text-sm focus:border-accent" />
+            </div>
+          </div>
+
+          <label className="flex items-center gap-2 text-sm">
+            <input type="checkbox" checked={isFeatured} onChange={(e) => setIsFeatured(e.target.checked)} />
+            Featured (shown first on the careers page)
+          </label>
+
           {error && <p role="alert" className="text-sm text-status-rejected">{error}</p>}
           <button type="submit" disabled={submitting || companies.length === 0}
                   className="self-start bg-accent text-white px-4 py-2 text-sm font-medium hover:bg-accent/90 disabled:opacity-50">
@@ -186,7 +227,10 @@ export default function AdminJobsPage() {
         <tbody>
           {jobs.map((job, i) => (
             <tr key={job.id} className={['border-b border-lineSoft last:border-b-0', i % 2 === 1 ? 'bg-lineSoft/20' : ''].join(' ')}>
-              <td className="px-4 py-3 font-medium">{job.title}</td>
+              <td className="px-4 py-3 font-medium">
+                {job.title}
+                {job.isFeatured && <span className="ml-2 text-[10px] font-mono uppercase text-status-review">★ Featured</span>}
+              </td>
               <td className="px-4 py-3 text-ink/60">{job.company?.name ?? '—'}</td>
               <td className="px-4 py-3 text-ink/60">{job.department}</td>
               <td className="px-4 py-3 text-ink/60">{job.location}</td>
@@ -212,12 +256,46 @@ export default function AdminJobsPage() {
   );
 }
 
-function Input({ label, name, required }: { label: string; name: string; required?: boolean }) {
+function Input({ label, name, required, placeholder }: { label: string; name: string; required?: boolean; placeholder?: string }) {
   return (
     <div>
       <label className="block text-sm font-medium mb-1.5">{label}</label>
-      <input name={name} required={required}
+      <input name={name} required={required} placeholder={placeholder}
              className="w-full border border-line px-3 py-2 text-sm focus:border-accent" />
+    </div>
+  );
+}
+
+function ArrayField({
+  label, items, setItems,
+}: { label: string; items: string[]; setItems: (items: string[]) => void }) {
+  function update(i: number, value: string) {
+    setItems(items.map((item, idx) => (idx === i ? value : item)));
+  }
+  function add() {
+    setItems([...items, '']);
+  }
+  function remove(i: number) {
+    setItems(items.length > 1 ? items.filter((_, idx) => idx !== i) : ['']);
+  }
+
+  return (
+    <div>
+      <label className="block text-sm font-medium mb-1.5">{label} <span className="text-ink/40 font-normal">(optional)</span></label>
+      {items.map((item, i) => (
+        <div key={i} className="flex gap-2 mb-2">
+          <input
+            value={item}
+            onChange={(e) => update(i, e.target.value)}
+            placeholder={`Add ${label.toLowerCase()} item…`}
+            className="flex-1 border border-line px-3 py-2 text-sm focus:border-accent"
+          />
+          {items.length > 1 && (
+            <button type="button" onClick={() => remove(i)} className="px-2.5 text-status-rejected border border-line hover:border-status-rejected">×</button>
+          )}
+        </div>
+      ))}
+      <button type="button" onClick={add} className="text-xs text-accent hover:underline">+ Add item</button>
     </div>
   );
 }
