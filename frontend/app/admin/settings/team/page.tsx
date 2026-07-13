@@ -2,13 +2,16 @@
 
 import { useEffect, useState, useCallback, FormEvent } from 'react';
 import { api, Reviewer, ApiError } from '@/lib/api';
-import { ensureFreshToken } from '@/lib/auth';
+import { ensureFreshToken, getSessionUser } from '@/lib/auth';
 
 export default function TeamSettingsPage() {
   const [reviewers, setReviewers] = useState<Reviewer[]>([]);
   const [showForm, setShowForm] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [submitting, setSubmitting] = useState(false);
+  const [currentUserId, setCurrentUserId] = useState<string | null>(null);
+
+  useEffect(() => { setCurrentUserId(getSessionUser()?.id ?? null); }, []);
 
   const load = useCallback(async () => {
     const token = await ensureFreshToken();
@@ -42,10 +45,15 @@ export default function TeamSettingsPage() {
   }
 
   async function handleDeactivate(id: string) {
-    const token = await ensureFreshToken();
-    if (!token) { window.location.href = '/login'; return; }
-    await api.patch(`/users/${id}/deactivate`, {}, token);
-    await load();
+    setError(null);
+    try {
+      const token = await ensureFreshToken();
+      if (!token) { window.location.href = '/login'; return; }
+      await api.patch(`/users/${id}/deactivate`, {}, token);
+      await load();
+    } catch (err) {
+      setError(err instanceof ApiError ? err.message : 'Could not deactivate this account.');
+    }
   }
 
   return (
@@ -83,6 +91,8 @@ export default function TeamSettingsPage() {
         </form>
       )}
 
+      {error && !showForm && <p role="alert" className="text-sm text-status-rejected mb-3">{error}</p>}
+
       <table className="w-full text-sm glass-panel rounded-2xl overflow-hidden">
         <thead>
           <tr className="bg-lineSoft/60 border-b border-line text-left">
@@ -96,7 +106,11 @@ export default function TeamSettingsPage() {
         <tbody>
           {reviewers.map((r, i) => (
             <tr key={r.id} className={['border-b border-lineSoft last:border-b-0', i % 2 === 1 ? 'bg-lineSoft/20' : ''].join(' ')}>
-              <td className="px-4 py-3 font-medium">{r.name}</td>
+              <td className="px-4 py-3 font-medium">
+                {r.name}
+                {r.isOwner && <span className="ml-2 text-[10px] font-mono uppercase text-accent">Owner</span>}
+                {r.id === currentUserId && <span className="ml-2 text-[10px] font-mono uppercase text-ink/40">(You)</span>}
+              </td>
               <td className="px-4 py-3 text-ink/60">{r.email}</td>
               <td className="px-4 py-3 text-ink/60 font-mono text-xs uppercase">{r.role}</td>
               <td className="px-4 py-3">
@@ -105,7 +119,7 @@ export default function TeamSettingsPage() {
                   : <span className="text-ink/30 text-xs font-mono uppercase">Deactivated</span>}
               </td>
               <td className="px-4 py-3 text-right">
-                {r.isActive && (
+                {r.isActive && !r.isOwner && r.id !== currentUserId && (
                   <button onClick={() => handleDeactivate(r.id)} className="text-status-rejected text-sm hover:underline">
                     Deactivate
                   </button>

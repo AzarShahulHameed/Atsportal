@@ -121,5 +121,6 @@ export interface Reviewer {
   name: string;
   role: 'ADMIN' | 'REVIEWER';
   isActive: boolean;
+  isOwner: boolean;
   createdAt: string;
 }

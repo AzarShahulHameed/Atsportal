@@ -48,14 +48,38 @@ export class UsersService {
   }
 
   async findAll() {
-    return this.prisma.user.findMany({
-      where: { email: { not: 'system@internal' } }, // hide the internal service account
-      select: { id: true, email: true, name: true, role: true, isActive: true, createdAt: true },
-      orderBy: { createdAt: 'desc' },
-    });
+    const [users, owner] = await Promise.all([
+      this.prisma.user.findMany({
+        where: { email: { not: 'system@internal' } },
+        select: { id: true, email: true, name: true, role: true, isActive: true, createdAt: true },
+        orderBy: { createdAt: 'desc' },
+      }),
+      this.prisma.user.findFirst({
+        where: { email: { not: 'system@internal' } },
+        orderBy: { createdAt: 'asc' },
+        select: { id: true },
+      }),
+    ]);
+    return users.map((u) => ({ ...u, isOwner: u.id === owner?.id }));
   }
 
-  async deactivate(id: string) {
+  async deactivate(id: string, requestingUserId: string) {
+    if (id === requestingUserId) {
+      throw new ConflictException("You can't deactivate your own account.");
+    }
+
+    // "Owner" = the earliest-created real account — determined dynamically,
+    // not a manual flag, so this protects whoever actually set the system
+    // up without needing a data-fix script run against production. No
+    // admin, including another admin, can deactivate this account.
+    const owner = await this.prisma.user.findFirst({
+      where: { email: { not: 'system@internal' } },
+      orderBy: { createdAt: 'asc' },
+    });
+    if (owner && owner.id === id) {
+      throw new ConflictException('This is the account owner and cannot be deactivated.');
+    }
+
     return this.prisma.user.update({ where: { id }, data: { isActive: false } });
   }
 }
