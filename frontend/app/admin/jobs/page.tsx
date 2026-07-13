@@ -4,6 +4,8 @@ import { useEffect, useState, useCallback, FormEvent } from 'react';
 import { api, Job, Company, ApiError } from '@/lib/api';
 import { ensureFreshToken } from '@/lib/auth';
 
+const WEBSITE_URL = process.env.NEXT_PUBLIC_WEBSITE_URL || '';
+
 export default function AdminJobsPage() {
   const [jobs, setJobs] = useState<Job[]>([]);
   const [companies, setCompanies] = useState<Company[]>([]);
@@ -95,6 +97,19 @@ export default function AdminJobsPage() {
     if (!token) { window.location.href = '/login'; return; }
     await api.patch(`/jobs/${id}/close`, {}, token);
     await load();
+  }
+
+  const [copiedId, setCopiedId] = useState<string | null>(null);
+
+  function copyApplyLink(job: Job, region: 'uae' | 'india') {
+    if (!WEBSITE_URL) {
+      alert('NEXT_PUBLIC_WEBSITE_URL is not set — add it in Vercel env vars to enable this.');
+      return;
+    }
+    const url = `${WEBSITE_URL}/${region}/careers?job=${job.id}`;
+    navigator.clipboard.writeText(url);
+    setCopiedId(`${job.id}-${region}`);
+    setTimeout(() => setCopiedId(null), 1500);
   }
 
   return (
@@ -242,11 +257,23 @@ export default function AdminJobsPage() {
                   : <span className="text-xs font-mono uppercase text-ink/40">Closed</span>}
               </td>
               <td className="px-4 py-3 text-right">
-                {job.isActive && (
-                  <button type="button" onClick={() => handleClose(job.id)} className="text-sm text-status-rejected hover:underline">
-                    Close
-                  </button>
-                )}
+                <div className="flex items-center justify-end gap-3">
+                  {job.isActive && job.region !== 'INDIA' && (
+                    <button type="button" onClick={() => copyApplyLink(job, 'uae')} className="text-xs text-accent hover:underline">
+                      {copiedId === `${job.id}-uae` ? 'Copied!' : 'Copy UAE link'}
+                    </button>
+                  )}
+                  {job.isActive && job.region !== 'UAE' && (
+                    <button type="button" onClick={() => copyApplyLink(job, 'india')} className="text-xs text-accent hover:underline">
+                      {copiedId === `${job.id}-india` ? 'Copied!' : 'Copy India link'}
+                    </button>
+                  )}
+                  {job.isActive && (
+                    <button type="button" onClick={() => handleClose(job.id)} className="text-sm text-status-rejected hover:underline">
+                      Close
+                    </button>
+                  )}
+                </div>
               </td>
             </tr>
           ))}
