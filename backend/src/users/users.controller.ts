@@ -5,6 +5,7 @@ import { Roles } from '../auth/decorators/roles.decorator';
 import { Role } from '@prisma/client';
 import { UsersService } from './users.service';
 import { CreateUserDto } from './dto/create-user.dto';
+import { UpdateUserDto } from './dto/update-user.dto';
 
 // Every route here is admin-only — this is how you create reviewer accounts.
 @UseGuards(JwtAuthGuard, RolesGuard)
@@ -23,8 +24,18 @@ export class UsersController {
     return this.usersService.findAll();
   }
 
+  @Patch(':id')
+  update(@Param('id') id: string, @Body() dto: UpdateUserDto) {
+    return this.usersService.update(id, dto);
+  }
+
   @Patch(':id/deactivate')
   deactivate(@Param('id') id: string, @Req() req: any) {
     return this.usersService.deactivate(id, req.user.id);
+  }
+
+  @Patch(':id/reactivate')
+  reactivate(@Param('id') id: string) {
+    return this.usersService.reactivate(id);
   }
 }

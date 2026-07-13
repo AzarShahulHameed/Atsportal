@@ -1,19 +1,41 @@
-import { ConflictException, Injectable } from '@nestjs/common';
+import { ConflictException, Injectable, NotFoundException } from '@nestjs/common';
 import * as bcrypt from 'bcrypt';
 import * as crypto from 'crypto';
 import { PrismaService } from '../prisma/prisma.service';
 import { EmailService } from '../email/email.service';
 import { wrapEmailBody } from '../email/templates/status-templates';
 import { CreateUserDto } from './dto/create-user.dto';
+import { UpdateUserDto } from './dto/update-user.dto';
 
 @Injectable()
 export class UsersService {
   constructor(private prisma: PrismaService, private emailService: EmailService) {}
 
+  // "Owner" = the earliest-created real account — determined dynamically,
+  // not a manual flag, so this protects whoever actually set the system up
+  // without needing a data-fix script run against production.
+  private async getOwnerId(): Promise<string | null> {
+    const owner = await this.prisma.user.findFirst({
+      where: { email: { not: 'system@internal' } },
+      orderBy: { createdAt: 'asc' },
+      select: { id: true },
+    });
+    return owner?.id ?? null;
+  }
+
   async create(dto: CreateUserDto) {
     const email = dto.email.toLowerCase().trim();
     const existing = await this.prisma.user.findUnique({ where: { email } });
-    if (existing) throw new ConflictException('A user with this email already exists');
+    if (existing) {
+      // A deactivated account still owns this email — the fix is
+      // reactivating + editing it, not creating a second row that would
+      // collide on the unique email constraint anyway.
+      throw new ConflictException(
+        existing.isActive
+          ? 'A user with this email already exists'
+          : 'A deactivated account already uses this email — reactivate and edit it instead of creating a new one.',
+      );
+    }
 
     // Server generates the temp password now — the admin never sees or
     // types it, which also means it never sits in an admin's clipboard or
@@ -48,38 +70,53 @@ export class UsersService {
   }
 
   async findAll() {
-    const [users, owner] = await Promise.all([
+    const [users, ownerId] = await Promise.all([
       this.prisma.user.findMany({
         where: { email: { not: 'system@internal' } },
         select: { id: true, email: true, name: true, role: true, isActive: true, createdAt: true },
         orderBy: { createdAt: 'desc' },
       }),
-      this.prisma.user.findFirst({
-        where: { email: { not: 'system@internal' } },
-        orderBy: { createdAt: 'asc' },
-        select: { id: true },
-      }),
+      this.getOwnerId(),
     ]);
-    return users.map((u) => ({ ...u, isOwner: u.id === owner?.id }));
+    return users.map((u) => ({ ...u, isOwner: u.id === ownerId }));
+  }
+
+  async update(id: string, dto: UpdateUserDto) {
+    const target = await this.prisma.user.findUnique({ where: { id } });
+    if (!target) throw new NotFoundException('User not found');
+
+    // The owner's own role can't be edited away from ADMIN — otherwise a
+    // slip here could lock the owner out of admin-only screens with no
+    // path back in except direct database access.
+    const ownerId = await this.getOwnerId();
+    if (ownerId === id && dto.role && dto.role !== 'ADMIN') {
+      throw new ConflictException("The account owner's role can't be changed from Admin.");
+    }
+
+    const { passwordHash: _omit, ...safeUser } = await this.prisma.user.update({
+      where: { id },
+      data: {
+        ...(dto.name !== undefined ? { name: dto.name } : {}),
+        ...(dto.role !== undefined ? { role: dto.role } : {}),
+      },
+    });
+    return safeUser;
   }
 
   async deactivate(id: string, requestingUserId: string) {
     if (id === requestingUserId) {
       throw new ConflictException("You can't deactivate your own account.");
     }
-
-    // "Owner" = the earliest-created real account — determined dynamically,
-    // not a manual flag, so this protects whoever actually set the system
-    // up without needing a data-fix script run against production. No
-    // admin, including another admin, can deactivate this account.
-    const owner = await this.prisma.user.findFirst({
-      where: { email: { not: 'system@internal' } },
-      orderBy: { createdAt: 'asc' },
-    });
-    if (owner && owner.id === id) {
+    const ownerId = await this.getOwnerId();
+    if (ownerId === id) {
       throw new ConflictException('This is the account owner and cannot be deactivated.');
     }
-
     return this.prisma.user.update({ where: { id }, data: { isActive: false } });
+  }
+
+  async reactivate(id: string) {
+    const target = await this.prisma.user.findUnique({ where: { id } });
+    if (!target) throw new NotFoundException('User not found');
+    return this.prisma.user.update({ where: { id }, data: { isActive: true } });
   }
 }
