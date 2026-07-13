@@ -13,5 +13,8 @@ export class ApplicationStatusChangedEvent {
     public readonly companyName: string,
     public readonly fromStatus: ApplicationStatus | null,
     public readonly toStatus: ApplicationStatus,
+    public readonly interviewDate?: string,
+    public readonly interviewTime?: string,
+    public readonly interviewLocation?: string,
   ) {}
 }

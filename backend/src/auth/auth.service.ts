@@ -22,7 +22,7 @@ export class AuthService {
   ) {}
 
   async login(email: string, password: string) {
-    const user = await this.prisma.user.findUnique({ where: { email } });
+    const user = await this.prisma.user.findUnique({ where: { email: email.toLowerCase().trim() } });
 
     // Same error for "no user" and "wrong password" — don't leak which one it was.
     if (!user || !user.isActive) {
@@ -36,13 +36,23 @@ export class AuthService {
     return this.issueTokens(user.id, user.email, user.role, user.name, user.mustChangePassword, user.avatarUrl);
   }
 
-  async changePassword(userId: string, currentPassword: string, newPassword: string) {
+  async changePassword(userId: string, currentPassword: string | undefined, newPassword: string) {
     const user = await this.prisma.user.findUnique({ where: { id: userId } });
     if (!user) throw new UnauthorizedException('User not found');
 
-    const matches = await bcrypt.compare(currentPassword, user.passwordHash);
-    if (!matches) {
-      throw new UnauthorizedException('Current password is incorrect');
+    // Forced first-time change: the person just authenticated with the temp
+    // password to even get a valid access token — asking for it again here
+    // is redundant, not extra security. Voluntary changes (from the profile
+    // page, mustChangePassword already false) still require it, since that
+    // guards against someone else using an already-open, unattended session.
+    if (!user.mustChangePassword) {
+      if (!currentPassword) {
+        throw new UnauthorizedException('Current password is required');
+      }
+      const matches = await bcrypt.compare(currentPassword, user.passwordHash);
+      if (!matches) {
+        throw new UnauthorizedException('Current password is incorrect');
+      }
     }
 
     const passwordHash = await bcrypt.hash(newPassword, 10);

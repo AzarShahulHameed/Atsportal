@@ -113,7 +113,7 @@ export default function ProfilePage() {
         <p className="text-sm text-ink/50 mt-1">Name, photo, and password for your own account.</p>
       </div>
 
-      <div className="border border-line p-6 mb-6">
+      <div className="glass-panel rounded-2xl p-6 mb-6">
         <h2 className="text-sm font-semibold uppercase tracking-wide text-ink/50 mb-4">Photo</h2>
         <div className="flex items-center gap-5">
           <div className="w-16 h-16 border border-line bg-accentSoft text-accent flex items-center justify-center text-xl font-semibold overflow-hidden shrink-0">
@@ -132,21 +132,21 @@ export default function ProfilePage() {
         </div>
       </div>
 
-      <form onSubmit={handleNameSave} className="border border-line p-6 mb-6 flex flex-col gap-4">
+      <form onSubmit={handleNameSave} className="glass-panel rounded-2xl p-6 mb-6 flex flex-col gap-4">
         <h2 className="text-sm font-semibold uppercase tracking-wide text-ink/50">Name</h2>
         <div>
           <input name="name" defaultValue={user.name} required
-                 className="w-full sm:w-80 border border-line px-3 py-2 text-sm focus:border-accent" />
+                 className="w-full sm:w-80 border border-line rounded-xl px-3.5 py-2.5 text-sm focus:border-accent focus:ring-2 focus:ring-accent/20 outline-none transition-shadow" />
         </div>
         {nameError && <p role="alert" className="text-sm text-status-rejected">{nameError}</p>}
         {nameSaved && <p className="text-sm text-status-hired">Saved.</p>}
         <button type="submit" disabled={savingName}
-                className="self-start bg-accent text-white px-4 py-2 text-sm font-medium hover:bg-accent/90 disabled:opacity-50">
+                className="self-start bg-beacon-gradient text-white rounded-xl px-4 py-2 text-sm font-medium hover:opacity-90 shadow-sm shadow-accent/25 transition-opacity disabled:opacity-50">
           {savingName ? 'Saving…' : 'Save name'}
         </button>
       </form>
 
-      <form onSubmit={handlePasswordChange} className="border border-line p-6 flex flex-col gap-4">
+      <form onSubmit={handlePasswordChange} className="glass-panel rounded-2xl p-6 flex flex-col gap-4">
         <h2 className="text-sm font-semibold uppercase tracking-wide text-ink/50">Password</h2>
         <Field label="Current password" name="currentPassword" required />
         <Field label="New password" name="newPassword" required minLength={8} />
@@ -154,7 +154,7 @@ export default function ProfilePage() {
         {pwError && <p role="alert" className="text-sm text-status-rejected">{pwError}</p>}
         {pwSaved && <p className="text-sm text-status-hired">Password updated. Other sessions have been signed out.</p>}
         <button type="submit" disabled={savingPw}
-                className="self-start bg-accent text-white px-4 py-2 text-sm font-medium hover:bg-accent/90 disabled:opacity-50">
+                className="self-start bg-beacon-gradient text-white rounded-xl px-4 py-2 text-sm font-medium hover:opacity-90 shadow-sm shadow-accent/25 transition-opacity disabled:opacity-50">
           {savingPw ? 'Saving…' : 'Change password'}
         </button>
       </form>
@@ -167,7 +167,7 @@ function Field({ label, name, required, minLength }: { label: string; name: stri
     <div>
       <label className="block text-sm font-medium mb-1.5">{label}</label>
       <input type="password" name={name} required={required} minLength={minLength}
-             className="w-full sm:w-80 border border-line px-3 py-2 text-sm focus:border-accent" />
+             className="w-full sm:w-80 border border-line rounded-xl px-3.5 py-2.5 text-sm focus:border-accent focus:ring-2 focus:ring-accent/20 outline-none transition-shadow" />
     </div>
   );
 }

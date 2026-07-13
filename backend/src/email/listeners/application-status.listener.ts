@@ -23,6 +23,9 @@ export class ApplicationStatusListener {
       candidateName: event.candidateName,
       jobTitle: event.jobTitle,
       companyName: event.companyName,
+      interviewDate: event.interviewDate,
+      interviewTime: event.interviewTime,
+      interviewLocation: event.interviewLocation,
     });
 
     const sent = await this.emailService.send(event.candidateEmail, subject, html);

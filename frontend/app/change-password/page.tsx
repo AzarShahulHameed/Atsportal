@@ -31,7 +31,7 @@ export default function ChangePasswordPage() {
       if (!token) { router.push('/login'); return; }
       const result = await api.post<{ accessToken: string; refreshToken: string; user: import('@/lib/auth').SessionUser }>(
         '/auth/change-password',
-        { currentPassword: fd.get('currentPassword'), newPassword },
+        { newPassword },
         token,
       );
       setSession(result.accessToken, result.refreshToken, result.user);
@@ -52,14 +52,13 @@ export default function ChangePasswordPage() {
       </p>
 
       <form onSubmit={handleSubmit} className="flex flex-col gap-4">
-        <Field label="Temporary password" name="currentPassword" type="password" required />
         <Field label="New password" name="newPassword" type="password" required minLength={8} />
         <Field label="Confirm new password" name="confirmPassword" type="password" required minLength={8} />
 
         {error && <p role="alert" className="text-sm text-status-rejected">{error}</p>}
 
         <button type="submit" disabled={loading}
-                className="bg-accent text-white px-4 py-2.5 text-sm font-medium hover:bg-accent/90 disabled:opacity-50 mt-2">
+                className="bg-beacon-gradient text-white rounded-xl px-4 py-2.5 text-sm font-medium hover:opacity-90 shadow-sm shadow-accent/25 transition-opacity disabled:opacity-50 mt-2">
           {loading ? 'Saving…' : 'Set password and continue'}
         </button>
       </form>
@@ -72,7 +71,7 @@ function Field({ label, name, type, required, minLength }: { label: string; name
     <div>
       <label className="block text-sm font-medium mb-1.5">{label}</label>
       <input type={type} name={name} required={required} minLength={minLength}
-             className="w-full border border-line px-3 py-2 text-sm focus:border-accent" />
+             className="w-full border border-line rounded-xl px-3.5 py-2.5 text-sm focus:border-accent focus:ring-2 focus:ring-accent/20 outline-none transition-shadow" />
     </div>
   );
 }

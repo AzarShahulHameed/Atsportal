@@ -135,6 +135,9 @@ model StatusEvent {
   fromStatus    ApplicationStatus?
   toStatus      ApplicationStatus
   note          String?
+  interviewDate     String?
+  interviewTime     String?
+  interviewLocation String?
   changedById   String
   changedBy     User              @relation(fields: [changedById], references: [id])
   emailSent     Boolean           @default(false)

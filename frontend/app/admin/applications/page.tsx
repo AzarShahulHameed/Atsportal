@@ -123,7 +123,7 @@ export default function AdminApplicationsPage() {
       )}
 
       {!loading && data && data.items.length > 0 && (
-        <table className="w-full text-sm border border-line">
+        <table className="w-full text-sm glass-panel rounded-2xl overflow-hidden">
           <thead>
             <tr className="bg-lineSoft/60 border-b border-line text-left">
               <th className="font-mono text-[11px] uppercase tracking-wide text-ink/50 font-medium px-4 py-2.5">Candidate</th>

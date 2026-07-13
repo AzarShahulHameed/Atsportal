@@ -52,7 +52,7 @@ export default function DashboardPage() {
 
       {stats && (
         <>
-          <div className="grid grid-cols-2 sm:grid-cols-4 gap-px bg-line border border-line mb-8">
+          <div className="grid grid-cols-2 sm:grid-cols-4 gap-4 mb-8">
             <StatCard label="Total applications" value={stats.total} />
             <StatCard label="Open roles" value={stats.activeJobs} />
             <StatCard label="Awaiting review" value={stats.byStatus.SUBMITTED ?? 0} accent />
@@ -61,15 +61,15 @@ export default function DashboardPage() {
 
           <div className="mb-8">
             <h2 className="text-sm font-semibold uppercase tracking-wide text-ink/50 mb-3">Pipeline breakdown</h2>
-            <div className="border border-line">
+            <div className="glass-panel rounded-2xl p-2">
               {STAT_STATUSES.map((s, i) => {
                 const count = stats.byStatus[s.value] ?? 0;
                 const max = Math.max(...STAT_STATUSES.map((x) => stats.byStatus[x.value] ?? 0), 1);
                 return (
-                  <div key={s.value} className={['flex items-center gap-4 px-4 py-2.5', i % 2 === 1 ? 'bg-lineSoft/20' : ''].join(' ')}>
+                  <div key={s.value} className="flex items-center gap-4 px-3 py-2.5">
                     <span className="text-xs font-mono uppercase tracking-wide text-ink/50 w-32 shrink-0">{s.label}</span>
-                    <div className="flex-1 h-2 bg-lineSoft">
-                      <div className="h-full bg-accent" style={{ width: `${(count / max) * 100}%` }} />
+                    <div className="flex-1 h-2.5 bg-white/60 rounded-full overflow-hidden">
+                      <div className="h-full bg-beacon-gradient rounded-full transition-all duration-500" style={{ width: `${(count / max) * 100}%` }} />
                     </div>
                     <span className="text-sm font-medium w-8 text-right">{count}</span>
                   </div>
@@ -83,13 +83,13 @@ export default function DashboardPage() {
               <h2 className="text-sm font-semibold uppercase tracking-wide text-ink/50">Recent activity</h2>
               <a href="/admin/applications" className="text-xs text-accent hover:underline">View all &rarr;</a>
             </div>
-            <table className="w-full text-sm border border-line">
+            <table className="w-full text-sm glass-panel rounded-2xl overflow-hidden">
               <tbody>
                 {stats.recent.map((app, i) => (
                   <tr
                     key={app.id}
                     onClick={() => { window.location.href = `/admin/applications/${app.id}`; }}
-                    className={['border-b border-lineSoft last:border-b-0 cursor-pointer hover:bg-accentSoft/30', i % 2 === 1 ? 'bg-lineSoft/20' : ''].join(' ')}
+                    className="border-b border-lineSoft last:border-b-0 cursor-pointer hover:bg-accentSoft/40 transition-colors"
                   >
                     <td className="px-4 py-3 font-medium">{app.candidateName}</td>
                     <td className="px-4 py-3 text-ink/60">{app.job.title}</td>
@@ -108,9 +108,9 @@ export default function DashboardPage() {
 
 function StatCard({ label, value, accent = false }: { label: string; value: number; accent?: boolean }) {
   return (
-    <div className="bg-white px-5 py-4">
+    <div className="glass-panel rounded-2xl px-5 py-4">
       <p className="text-xs font-mono uppercase tracking-wide text-ink/50 mb-1.5">{label}</p>
-      <p className={['text-2xl font-semibold tracking-tight', accent ? 'text-accent' : ''].join(' ')}>{value}</p>
+      <p className={['text-2xl font-extrabold tracking-tight', accent ? 'bg-beacon-gradient bg-clip-text text-transparent' : 'text-ink'].join(' ')}>{value}</p>
     </div>
   );
 }

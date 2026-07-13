@@ -72,7 +72,7 @@ export function ApplyForm({ jobId }: { jobId: string }) {
           <select
             name="source"
             required
-            className="w-full border border-line px-3 py-2 text-sm bg-white focus:border-accent"
+            className="w-full border border-line rounded-xl px-3.5 py-2.5 text-sm bg-white focus:border-accent focus:ring-2 focus:ring-accent/20 outline-none transition-shadow"
             defaultValue="website"
           >
             <option value="website">Company website</option>
@@ -114,7 +114,7 @@ export function ApplyForm({ jobId }: { jobId: string }) {
         <textarea
           name="coverLetterText"
           rows={4}
-          className="w-full border border-line px-3 py-2 text-sm focus:border-accent"
+          className="w-full border border-line rounded-xl px-3.5 py-2.5 text-sm focus:border-accent focus:ring-2 focus:ring-accent/20 outline-none transition-shadow"
         />
       </div>
 
@@ -125,7 +125,7 @@ export function ApplyForm({ jobId }: { jobId: string }) {
       <button
         type="submit"
         disabled={submitting}
-        className="self-start bg-accent text-white px-5 py-2.5 text-sm font-medium hover:bg-accent/90 disabled:opacity-50"
+        className="self-start bg-beacon-gradient text-white rounded-xl px-5 py-2.5 text-sm font-medium hover:opacity-90 shadow-sm shadow-accent/25 transition-opacity disabled:opacity-50"
       >
         {submitting ? 'Submitting…' : 'Submit application'}
       </button>
@@ -144,7 +144,7 @@ function Field({
         name={name}
         required={required}
         placeholder={placeholder}
-        className="w-full border border-line px-3 py-2 text-sm focus:border-accent"
+        className="w-full border border-line rounded-xl px-3.5 py-2.5 text-sm focus:border-accent focus:ring-2 focus:ring-accent/20 outline-none transition-shadow"
       />
     </div>
   );

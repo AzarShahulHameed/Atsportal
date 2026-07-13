@@ -39,7 +39,7 @@ export function PipelineStepper({ status }: { status: ApplicationStatus }) {
               <div
                 className={[
                   'h-3 w-3 rounded-full border-2 shrink-0',
-                  done ? 'bg-accent border-accent' : active ? 'border-accent bg-white' : 'border-line bg-white',
+                  done ? 'bg-beacon-gradient border-transparent' : active ? 'border-accent bg-white' : 'border-line bg-white',
                 ].join(' ')}
               />
               <span className={`text-[11px] font-mono uppercase tracking-wide ${active ? 'text-accent font-semibold' : 'text-ink/50'}`}>
@@ -47,7 +47,7 @@ export function PipelineStepper({ status }: { status: ApplicationStatus }) {
               </span>
             </div>
             {i < PIPELINE.length - 1 && (
-              <div className={`h-[2px] flex-1 mx-1 mb-4 ${done ? 'bg-accent' : 'bg-line'}`} />
+              <div className={`h-[2px] flex-1 mx-1 mb-4 rounded-full ${done ? 'bg-beacon-gradient' : 'bg-line'}`} />
             )}
           </div>
         );

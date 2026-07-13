@@ -6,6 +6,7 @@ import { api } from './api';
 // check it for route gating. Refresh token: kept in localStorage, only ever
 // sent explicitly to /auth/refresh — never attached to other requests.
 const ACCESS_COOKIE = 'ats_access_token';
+const SESSION_FLAG_COOKIE = 'ats_has_session'; // longer-lived, non-sensitive — lets middleware know a refresh token likely exists in localStorage, without middleware being able to read localStorage itself
 const REFRESH_KEY = 'ats_refresh_token';
 const USER_KEY = 'ats_user';
 
@@ -20,6 +21,7 @@ export interface SessionUser {
 
 export function setSession(accessToken: string, refreshToken: string, user?: SessionUser) {
   document.cookie = `${ACCESS_COOKIE}=${accessToken}; path=/; max-age=900; SameSite=Lax`;
+  document.cookie = `${SESSION_FLAG_COOKIE}=1; path=/; max-age=${7 * 24 * 60 * 60}; SameSite=Lax`;
   localStorage.setItem(REFRESH_KEY, refreshToken);
   if (user) localStorage.setItem(USER_KEY, JSON.stringify(user));
 }
@@ -31,6 +33,7 @@ export function getSessionUser(): SessionUser | null {
 
 export function clearSession() {
   document.cookie = `${ACCESS_COOKIE}=; path=/; max-age=0`;
+  document.cookie = `${SESSION_FLAG_COOKIE}=; path=/; max-age=0`;
   localStorage.removeItem(REFRESH_KEY);
   localStorage.removeItem(USER_KEY);
 }

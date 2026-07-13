@@ -40,15 +40,33 @@ export class EmailTemplatesService {
 
   // What the listener actually calls to render a real outgoing email —
   // resolves the override-or-default, substitutes placeholders, wraps it.
-  async render(status: ApplicationStatus, vars: { candidateName: string; jobTitle: string; companyName: string }) {
-    const override = await this.prisma.emailTemplate.findUnique({ where: { status } });
+  async render(
+    status: ApplicationStatus,
+    vars: {
+      candidateName: string; jobTitle: string; companyName: string;
+      interviewDate?: string; interviewTime?: string; interviewLocation?: string;
+    },
+  ) {
+    const [override, settings] = await Promise.all([
+      this.prisma.emailTemplate.findUnique({ where: { status } }),
+      this.prisma.settings.findUnique({ where: { id: 'singleton' } }),
+    ]);
     const key = status as StatusKey;
     const subjectTemplate = override?.subject ?? DEFAULT_TEMPLATES[key].subject;
     const bodyTemplate = override?.bodyHtml ?? DEFAULT_TEMPLATES[key].bodyHtml;
 
-    const subject = substitutePlaceholders(subjectTemplate, vars);
-    const innerBody = substitutePlaceholders(bodyTemplate, vars);
-    const html = wrapEmailBody(vars.companyName, innerBody);
+    const substitutionVars = {
+      candidateName: vars.candidateName,
+      jobTitle: vars.jobTitle,
+      companyName: vars.companyName,
+      interviewDate: vars.interviewDate || 'To be confirmed',
+      interviewTime: vars.interviewTime || 'To be confirmed',
+      interviewLocation: vars.interviewLocation || 'To be confirmed',
+    };
+
+    const subject = substitutePlaceholders(subjectTemplate, substitutionVars);
+    const innerBody = substitutePlaceholders(bodyTemplate, substitutionVars);
+    const html = wrapEmailBody(vars.companyName, innerBody, settings?.logoUrl);
 
     return { subject, html };
   }

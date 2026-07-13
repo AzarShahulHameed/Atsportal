@@ -95,17 +95,17 @@ export default function EmailTemplatesPage() {
                 <div>
                   <label className="block text-xs font-medium mb-1">Subject</label>
                   <input value={draft.subject} onChange={(e) => setDraft((d) => ({ ...d, subject: e.target.value }))}
-                         className="w-full border border-line px-3 py-2 text-sm bg-white focus:border-accent" />
+                         className="w-full border border-line rounded-xl px-3.5 py-2.5 text-sm bg-white focus:border-accent focus:ring-2 focus:ring-accent/20 outline-none transition-shadow" />
                 </div>
                 <div>
                   <label className="block text-xs font-medium mb-1">Body (HTML)</label>
                   <textarea value={draft.bodyHtml} onChange={(e) => setDraft((d) => ({ ...d, bodyHtml: e.target.value }))}
-                            rows={8} className="w-full border border-line px-3 py-2 text-sm font-mono bg-white focus:border-accent" />
+                            rows={8} className="w-full border border-line rounded-xl px-3.5 py-2.5 text-sm font-mono bg-white focus:border-accent focus:ring-2 focus:ring-accent/20 outline-none transition-shadow" />
                 </div>
                 {error && <p role="alert" className="text-sm text-status-rejected">{error}</p>}
                 <div className="flex gap-2">
                   <button onClick={handleSave} disabled={saving}
-                          className="bg-accent text-white px-4 py-2 text-sm font-medium hover:bg-accent/90 disabled:opacity-50">
+                          className="bg-beacon-gradient text-white rounded-xl px-4 py-2 text-sm font-medium hover:opacity-90 shadow-sm shadow-accent/25 transition-opacity disabled:opacity-50">
                     {saving ? 'Saving…' : 'Save template'}
                   </button>
                   <button onClick={() => setOpenStatus(null)} className="px-4 py-2 text-sm font-medium border border-line hover:border-accent">

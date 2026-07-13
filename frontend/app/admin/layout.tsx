@@ -3,6 +3,8 @@
 import { useEffect, useState } from 'react';
 import { usePathname, useRouter } from 'next/navigation';
 import { clearSession, getSessionUser, SessionUser } from '@/lib/auth';
+import { BeaconLogo } from '@/components/BeaconLogo';
+import { TopLoadingBar } from '@/components/TopLoadingBar';
 
 const NAV = [
   { href: '/admin', label: 'Dashboard', match: (p: string) => p === '/admin' },
@@ -33,7 +35,6 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
   useEffect(() => {
     const sessionUser = getSessionUser();
     setUser(sessionUser);
-    // A temp-password account can't use the rest of the console until it sets its own.
     if (sessionUser?.mustChangePassword) {
       router.push('/change-password');
     }
@@ -44,17 +45,18 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
     router.push('/login');
   }
 
-  const pageTitle = PAGE_TITLES.find(([match]) => match(pathname))?.[1] ?? 'Review dashboard';
+  const pageTitle = PAGE_TITLES.find(([match]) => match(pathname))?.[1] ?? 'Dashboard';
 
   return (
-    <div className="min-h-screen flex bg-paper">
-      <aside className="w-60 shrink-0 bg-chrome-bg flex flex-col border-r border-chrome-border">
-        <div className="h-16 flex items-center px-5 border-b border-chrome-border">
-          <span className="font-mono text-xs uppercase tracking-widest text-chrome-textActive font-medium">
-            ATS Portal
-          </span>
+    <div className="min-h-screen flex">
+      <TopLoadingBar />
+
+      <aside className="w-60 shrink-0 glass-panel border-r flex flex-col m-3 mr-0 rounded-2xl">
+        <div className="h-16 flex items-center gap-2.5 px-5">
+          <BeaconLogo size={26} />
+          <span className="text-base font-extrabold tracking-tight text-ink">Beacon</span>
         </div>
-        <nav className="flex-1 py-4">
+        <nav className="flex-1 py-2 px-3">
           {NAV.map((item) => {
             const active = item.match(pathname);
             return (
@@ -62,10 +64,10 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
                 key={item.href}
                 href={item.href}
                 className={[
-                  'flex items-center h-10 px-5 text-sm border-l-2 transition-colors',
+                  'flex items-center h-10 px-3.5 mb-0.5 text-sm rounded-xl transition-all',
                   active
-                    ? 'border-accent bg-chrome-bgHover text-chrome-textActive font-medium'
-                    : 'border-transparent text-chrome-text hover:bg-chrome-bgHover hover:text-chrome-textActive',
+                    ? 'bg-beacon-gradient text-white font-medium shadow-sm shadow-accent/30'
+                    : 'text-chrome-text hover:bg-chrome-bgHover hover:text-ink',
                 ].join(' ')}
               >
                 {item.label}
@@ -73,10 +75,10 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
             );
           })}
         </nav>
-        <div className="p-4 border-t border-chrome-border">
+        <div className="p-3">
           <button
             onClick={handleLogout}
-            className="w-full text-left text-sm text-chrome-textMuted hover:text-chrome-textActive px-1 py-1.5"
+            className="w-full text-left text-sm text-chrome-textMuted hover:text-ink px-3.5 py-2 rounded-xl hover:bg-chrome-bgHover transition-colors"
           >
             Sign out
           </button>
@@ -84,11 +86,11 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
       </aside>
 
       <div className="flex-1 flex flex-col min-w-0">
-        <header className="h-16 border-b border-line bg-white flex items-center justify-between px-8">
+        <header className="h-16 glass-panel border-b-0 flex items-center justify-between px-8 m-3 mb-0 rounded-2xl">
           <p className="text-sm text-ink/50 font-mono uppercase tracking-wide">{pageTitle}</p>
           {user && (
             <a href="/admin/settings/profile" className="flex items-center gap-2.5 hover:opacity-80">
-              <div className="w-7 h-7 bg-accentSoft text-accent flex items-center justify-center text-xs font-semibold overflow-hidden shrink-0">
+              <div className="w-8 h-8 rounded-full bg-beacon-gradient text-white flex items-center justify-center text-xs font-semibold overflow-hidden shrink-0 shadow-sm">
                 {user.avatarUrl
                   ? <img src={user.avatarUrl} alt={user.name} className="w-full h-full object-cover" />
                   : user.name.slice(0, 1).toUpperCase()}

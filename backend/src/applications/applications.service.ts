@@ -190,6 +190,9 @@ export class ApplicationsService {
           fromStatus: application.status,
           toStatus: dto.status,
           note: dto.note,
+          interviewDate: dto.interviewDate,
+          interviewTime: dto.interviewTime,
+          interviewLocation: dto.interviewLocation,
           changedById: reviewerId,
         },
       }),
@@ -213,6 +216,9 @@ export class ApplicationsService {
         companyName,
         application.status,
         dto.status,
+        dto.interviewDate,
+        dto.interviewTime,
+        dto.interviewLocation,
       ),
     );
 

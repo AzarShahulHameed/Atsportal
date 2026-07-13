@@ -124,14 +124,14 @@ export default function AdminJobsPage() {
         <button
           type="button"
           onClick={() => setShowForm((s) => !s)}
-          className="bg-accent text-white px-4 py-2 text-sm font-medium hover:bg-accent/90"
+          className="bg-beacon-gradient text-white rounded-xl px-4 py-2 text-sm font-medium hover:opacity-90 shadow-sm shadow-accent/25 transition-opacity"
         >
           {showForm ? 'Cancel' : 'New posting'}
         </button>
       </header>
 
       {showForm && (
-        <form onSubmit={handleCreate} className="border border-line p-5 mb-8 flex flex-col gap-4">
+        <form onSubmit={handleCreate} className="glass-panel rounded-2xl p-5 mb-8 flex flex-col gap-4">
           {companies.length === 0 && (
             <p className="text-sm text-status-review bg-status-review/5 border border-status-review/20 px-3 py-2">
               No hiring entities yet — add one below before you can publish a posting.
@@ -152,15 +152,15 @@ export default function AdminJobsPage() {
                   onChange={(e) => setNewCompanyName(e.target.value)}
                   onKeyDown={(e) => { if (e.key === 'Enter') { e.preventDefault(); handleCreateCompany(); } }}
                   placeholder="e.g. Catapult Auditing LLC" required
-                  className="flex-1 border border-line px-3 py-2 text-sm focus:border-accent" />
+                  className="flex-1 border border-line rounded-xl px-3.5 py-2.5 text-sm focus:border-accent focus:ring-2 focus:ring-accent/20 outline-none transition-shadow" />
                 <button type="button" onClick={handleCreateCompany} disabled={creatingCompany}
-                        className="bg-accent text-white px-3 py-2 text-sm font-medium hover:bg-accent/90 disabled:opacity-50">
+                        className="bg-beacon-gradient text-white rounded-xl px-3 py-2 text-sm font-medium hover:opacity-90 shadow-sm shadow-accent/25 transition-opacity disabled:opacity-50">
                   {creatingCompany ? 'Adding…' : 'Add'}
                 </button>
               </div>
             ) : (
               <select name="companyId" required defaultValue=""
-                      className="w-full sm:w-80 border border-line px-3 py-2 text-sm focus:border-accent">
+                      className="w-full sm:w-80 border border-line rounded-xl px-3.5 py-2.5 text-sm focus:border-accent focus:ring-2 focus:ring-accent/20 outline-none transition-shadow">
                 <option value="" disabled>Select entity…</option>
                 {companies.map((c) => <option key={c.id} value={c.id}>{c.name}</option>)}
               </select>
@@ -177,7 +177,7 @@ export default function AdminJobsPage() {
             <div>
               <label className="block text-sm font-medium mb-1.5">Employment type</label>
               <select name="employmentType" defaultValue="FULL_TIME"
-                      className="w-full border border-line px-3 py-2 text-sm focus:border-accent">
+                      className="w-full border border-line rounded-xl px-3.5 py-2.5 text-sm focus:border-accent focus:ring-2 focus:ring-accent/20 outline-none transition-shadow">
                 <option value="FULL_TIME">Full time</option>
                 <option value="PART_TIME">Part time</option>
                 <option value="CONTRACT">Contract</option>
@@ -187,7 +187,7 @@ export default function AdminJobsPage() {
             <div>
               <label className="block text-sm font-medium mb-1.5">Region</label>
               <select name="region" defaultValue="BOTH"
-                      className="w-full border border-line px-3 py-2 text-sm focus:border-accent">
+                      className="w-full border border-line rounded-xl px-3.5 py-2.5 text-sm focus:border-accent focus:ring-2 focus:ring-accent/20 outline-none transition-shadow">
                 <option value="BOTH">Both (UAE + India)</option>
                 <option value="UAE">UAE only</option>
                 <option value="INDIA">India only</option>
@@ -198,7 +198,7 @@ export default function AdminJobsPage() {
           <div>
             <label className="block text-sm font-medium mb-1.5">Description</label>
             <textarea name="description" required rows={4}
-                      className="w-full border border-line px-3 py-2 text-sm focus:border-accent" />
+                      className="w-full border border-line rounded-xl px-3.5 py-2.5 text-sm focus:border-accent focus:ring-2 focus:ring-accent/20 outline-none transition-shadow" />
           </div>
 
           <ArrayField label="Responsibilities" items={responsibilities} setItems={setResponsibilities} />
@@ -209,7 +209,7 @@ export default function AdminJobsPage() {
             <Input label="Salary range (optional)" name="salaryRange" placeholder="e.g. AED 15,000 – 22,000/month" />
             <div>
               <label className="block text-sm font-medium mb-1.5">Application deadline (optional)</label>
-              <input type="date" name="deadline" className="w-full border border-line px-3 py-2 text-sm focus:border-accent" />
+              <input type="date" name="deadline" className="w-full border border-line rounded-xl px-3.5 py-2.5 text-sm focus:border-accent focus:ring-2 focus:ring-accent/20 outline-none transition-shadow" />
             </div>
           </div>
 
@@ -220,13 +220,13 @@ export default function AdminJobsPage() {
 
           {error && <p role="alert" className="text-sm text-status-rejected">{error}</p>}
           <button type="submit" disabled={submitting || companies.length === 0}
-                  className="self-start bg-accent text-white px-4 py-2 text-sm font-medium hover:bg-accent/90 disabled:opacity-50">
+                  className="self-start bg-beacon-gradient text-white rounded-xl px-4 py-2 text-sm font-medium hover:opacity-90 shadow-sm shadow-accent/25 transition-opacity disabled:opacity-50">
             {submitting ? 'Publishing…' : 'Publish posting'}
           </button>
         </form>
       )}
 
-      <table className="w-full text-sm border border-line">
+      <table className="w-full text-sm glass-panel rounded-2xl overflow-hidden">
         <thead>
           <tr className="bg-lineSoft/60 border-b border-line text-left">
             <th className="font-mono text-[11px] uppercase tracking-wide text-ink/50 font-medium px-4 py-2.5">Title</th>
@@ -288,7 +288,7 @@ function Input({ label, name, required, placeholder }: { label: string; name: st
     <div>
       <label className="block text-sm font-medium mb-1.5">{label}</label>
       <input name={name} required={required} placeholder={placeholder}
-             className="w-full border border-line px-3 py-2 text-sm focus:border-accent" />
+             className="w-full border border-line rounded-xl px-3.5 py-2.5 text-sm focus:border-accent focus:ring-2 focus:ring-accent/20 outline-none transition-shadow" />
     </div>
   );
 }
@@ -315,7 +315,7 @@ function ArrayField({
             value={item}
             onChange={(e) => update(i, e.target.value)}
             placeholder={`Add ${label.toLowerCase()} item…`}
-            className="flex-1 border border-line px-3 py-2 text-sm focus:border-accent"
+            className="flex-1 border border-line rounded-xl px-3.5 py-2.5 text-sm focus:border-accent focus:ring-2 focus:ring-accent/20 outline-none transition-shadow"
           />
           {items.length > 1 && (
             <button type="button" onClick={() => remove(i)} className="px-2.5 text-status-rejected border border-line hover:border-status-rejected">×</button>

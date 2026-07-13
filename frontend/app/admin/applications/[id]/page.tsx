@@ -40,14 +40,30 @@ export default function ApplicationDetailPage({ params }: { params: { id: string
 
   useEffect(() => { load(); }, [load]);
 
+  const [interviewDate, setInterviewDate] = useState('');
+  const [interviewTime, setInterviewTime] = useState('');
+  const [interviewLocation, setInterviewLocation] = useState('');
+
   async function handleTransition(status: ApplicationStatus) {
     setError(null);
     setUpdating(status);
     try {
       const token = await ensureFreshToken();
       if (!token) { window.location.href = '/login'; return; }
-      await api.patch(`/applications/${params.id}/status`, { status, note: note || undefined }, token);
+      const isSchedulingInterview = status === 'INTERVIEW_SCHEDULED';
+      await api.patch(`/applications/${params.id}/status`, {
+        status,
+        note: note || undefined,
+        ...(isSchedulingInterview ? {
+          interviewDate: interviewDate || undefined,
+          interviewTime: interviewTime || undefined,
+          interviewLocation: interviewLocation || undefined,
+        } : {}),
+      }, token);
       setNote('');
+      setInterviewDate('');
+      setInterviewTime('');
+      setInterviewLocation('');
       await load();
     } catch (err) {
       setError(err instanceof ApiError ? err.message : 'Could not update status.');
@@ -111,7 +127,7 @@ export default function ApplicationDetailPage({ params }: { params: { id: string
       {(app.nationality || app.currentLocation || app.currentRole || app.yearsExperience || app.linkedinUrl || app.portfolioUrl) && (
         <div className="mb-10">
           <h2 className="text-sm font-semibold uppercase tracking-wide text-ink/50 mb-3">Candidate profile</h2>
-          <dl className="grid sm:grid-cols-2 gap-x-8 gap-y-2 text-sm border border-line p-4">
+          <dl className="grid sm:grid-cols-2 gap-x-8 gap-y-2 text-sm glass-panel rounded-2xl p-4">
             {app.nationality && <Row label="Nationality" value={app.nationality} />}
             {app.currentLocation && <Row label="Current location" value={app.currentLocation} />}
             {app.currentRole && <Row label="Current role" value={app.currentRole} />}
@@ -123,14 +139,41 @@ export default function ApplicationDetailPage({ params }: { params: { id: string
       )}
 
       {nextOptions.length > 0 && (
-        <div className="border border-line p-5 mb-10">
+        <div className="glass-panel rounded-2xl p-5 mb-10">
           <h2 className="text-sm font-semibold uppercase tracking-wide text-ink/50 mb-3">Move this application</h2>
+
+          {nextOptions.includes('INTERVIEW_SCHEDULED') && (
+            <div className="border border-line bg-lineSoft/20 p-4 mb-3">
+              <p className="text-xs font-mono uppercase tracking-wide text-ink/50 mb-2">
+                Interview details — required for the candidate&apos;s email if moving to Interview scheduled
+              </p>
+              <div className="grid sm:grid-cols-3 gap-3">
+                <div>
+                  <label className="block text-xs font-medium mb-1">Date</label>
+                  <input type="date" value={interviewDate} onChange={(e) => setInterviewDate(e.target.value)}
+                         className="w-full border border-line rounded-xl px-3.5 py-2.5 text-sm bg-white focus:border-accent focus:ring-2 focus:ring-accent/20 outline-none transition-shadow" />
+                </div>
+                <div>
+                  <label className="block text-xs font-medium mb-1">Time</label>
+                  <input type="time" value={interviewTime} onChange={(e) => setInterviewTime(e.target.value)}
+                         className="w-full border border-line rounded-xl px-3.5 py-2.5 text-sm bg-white focus:border-accent focus:ring-2 focus:ring-accent/20 outline-none transition-shadow" />
+                </div>
+                <div>
+                  <label className="block text-xs font-medium mb-1">Location / link</label>
+                  <input type="text" value={interviewLocation} onChange={(e) => setInterviewLocation(e.target.value)}
+                         placeholder="Office address or video call link"
+                         className="w-full border border-line rounded-xl px-3.5 py-2.5 text-sm bg-white focus:border-accent focus:ring-2 focus:ring-accent/20 outline-none transition-shadow" />
+                </div>
+              </div>
+            </div>
+          )}
+
           <textarea
             value={note}
             onChange={(e) => setNote(e.target.value)}
             placeholder="Optional note for the audit log…"
             rows={2}
-            className="w-full border border-line px-3 py-2 text-sm mb-3 focus:border-accent"
+            className="w-full border border-line rounded-xl px-3.5 py-2.5 text-sm mb-3 focus:border-accent focus:ring-2 focus:ring-accent/20 outline-none transition-shadow"
           />
           {error && <p role="alert" className="text-sm text-status-rejected mb-3">{error}</p>}
           <div className="flex flex-wrap gap-2">
@@ -143,7 +186,7 @@ export default function ApplicationDetailPage({ params }: { params: { id: string
                   'text-sm font-medium px-4 py-2 disabled:opacity-50',
                   status === 'REJECTED'
                     ? 'border border-status-rejected text-status-rejected hover:bg-status-rejected/5'
-                    : 'bg-accent text-white hover:bg-accent/90',
+                    : 'bg-beacon-gradient text-white rounded-xl hover:opacity-90 shadow-sm shadow-accent/25 transition-opacity',
                 ].join(' ')}
               >
                 {updating === status ? 'Updating…' : `Move to: ${STATUS_LABEL[status]}`}

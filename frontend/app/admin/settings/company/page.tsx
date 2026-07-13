@@ -79,7 +79,7 @@ export default function CompanySettingsPage() {
         <p className="text-sm text-ink/50 mt-1">This name and logo appear on candidate-facing emails and the careers site.</p>
       </div>
 
-      <div className="border border-line p-6 mb-6">
+      <div className="glass-panel rounded-2xl p-6 mb-6">
         <h2 className="text-sm font-semibold uppercase tracking-wide text-ink/50 mb-4">Logo</h2>
         <div className="flex items-center gap-5">
           <div className="w-16 h-16 border border-line flex items-center justify-center bg-lineSoft/30 shrink-0 overflow-hidden">
@@ -97,17 +97,17 @@ export default function CompanySettingsPage() {
         </div>
       </div>
 
-      <form onSubmit={handleSave} className="border border-line p-6 flex flex-col gap-4">
+      <form onSubmit={handleSave} className="glass-panel rounded-2xl p-6 flex flex-col gap-4">
         <h2 className="text-sm font-semibold uppercase tracking-wide text-ink/50">Details</h2>
         <div>
           <label className="block text-sm font-medium mb-1.5">Company name</label>
           <input name="companyName" defaultValue={settings.companyName} required
-                 className="w-full sm:w-80 border border-line px-3 py-2 text-sm focus:border-accent" />
+                 className="w-full sm:w-80 border border-line rounded-xl px-3.5 py-2.5 text-sm focus:border-accent focus:ring-2 focus:ring-accent/20 outline-none transition-shadow" />
         </div>
         <div>
           <label className="block text-sm font-medium mb-1.5">Sender email (for status notifications)</label>
           <input name="senderEmail" type="email" defaultValue={settings.senderEmail ?? ''} placeholder="careers@yourcompany.com"
-                 className="w-full sm:w-80 border border-line px-3 py-2 text-sm focus:border-accent" />
+                 className="w-full sm:w-80 border border-line rounded-xl px-3.5 py-2.5 text-sm focus:border-accent focus:ring-2 focus:ring-accent/20 outline-none transition-shadow" />
           <p className="text-xs text-ink/40 mt-1.5">Must be on a domain verified in your Resend account, or emails won&apos;t send.</p>
         </div>
 
@@ -115,7 +115,7 @@ export default function CompanySettingsPage() {
         {saved && <p className="text-sm text-status-hired">Saved.</p>}
 
         <button type="submit" disabled={saving}
-                className="self-start text-sm font-medium bg-accent text-white px-4 py-2 hover:bg-accent/90 disabled:opacity-50">
+                className="self-start text-sm font-medium bg-beacon-gradient text-white rounded-xl px-4 py-2 hover:opacity-90 shadow-sm shadow-accent/25 transition-opacity disabled:opacity-50">
           {saving ? 'Saving…' : 'Save changes'}
         </button>
       </form>

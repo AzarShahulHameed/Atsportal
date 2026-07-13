@@ -1,4 +1,4 @@
-# ATS Portal — Backend
+# Beacon — Backend
 
 ## Setup
 ```

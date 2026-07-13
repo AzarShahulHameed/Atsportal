@@ -1,39 +1,43 @@
 import type { Config } from 'tailwindcss';
 
-// Token system — Workday/enterprise direction: formal, structured, heavier
-// chrome. A dark navy sidebar anchors the app (real "system" weight, not a
-// thin top bar), hairline borders define every region instead of soft
-// shadows, and tables carry visible header/zebra structure rather than
-// floating as loose rows. Accent shifts from a soft indigo to a flatter,
-// more institutional blue.
+// Beacon design tokens — light, airy, glass-and-gradient direction.
+// Page background carries a soft multi-tone wash (not flat white); surfaces
+// are translucent frosted panels (bg-white/60 + backdrop-blur) rather than
+// hard-bordered cards; the accent is a gradient (indigo -> violet), used for
+// primary actions and the signature "beacon" glow motif, not a flat color.
 export default {
   content: ['./app/**/*.{ts,tsx}', './components/**/*.{ts,tsx}'],
   theme: {
     extend: {
       colors: {
-        ink: '#0F172A',
-        paper: '#F8FAFC',
-        line: '#CBD5E1',
-        lineSoft: '#E2E8F0',
-        accent: '#1D4ED8',
-        accentSoft: '#DBEAFE',
+        ink: '#1E1B2E',
+        paper: '#FAFAFF',
+        line: '#E4E1F0',
+        lineSoft: '#EFEDF9',
+        accent: '#6D5AE6',
+        accentSoft: '#EEEBFF',
+        accentTo: '#A855F7',
         chrome: {
-          bg: '#0B1220',
-          bgHover: '#151F32',
-          border: '#1E293B',
-          text: '#CBD5E1',
-          textMuted: '#64748B',
-          textActive: '#FFFFFF',
+          bg: 'rgba(255,255,255,0.55)',
+          bgHover: 'rgba(109,90,230,0.06)',
+          border: 'rgba(228,225,240,0.8)',
+          text: '#5B5670',
+          textMuted: '#8B87A0',
+          textActive: '#1E1B2E',
         },
         status: {
-          submitted: '#475569',
-          review: '#92400E',
-          shortlisted: '#075985',
-          interview: '#6D28D9',
-          offered: '#065F46',
-          hired: '#166534',
-          rejected: '#991B1B',
+          submitted: '#6B7280',
+          review: '#B45309',
+          shortlisted: '#0369A1',
+          interview: '#7C3AED',
+          offered: '#047857',
+          hired: '#15803D',
+          rejected: '#B91C1C',
         },
+      },
+      backgroundImage: {
+        'beacon-gradient': 'linear-gradient(135deg, #6D5AE6 0%, #A855F7 100%)',
+        'beacon-wash': 'radial-gradient(circle at 15% 0%, rgba(109,90,230,0.08), transparent 40%), radial-gradient(circle at 85% 20%, rgba(168,85,247,0.07), transparent 45%)',
       },
       fontFamily: {
         sans: ['Inter', 'ui-sans-serif', 'system-ui', 'sans-serif'],

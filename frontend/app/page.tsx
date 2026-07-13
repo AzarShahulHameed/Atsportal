@@ -1,4 +1,7 @@
 import { Job } from '@/lib/api';
+import type { Metadata } from 'next';
+
+export const metadata: Metadata = { title: 'Careers' };
 
 const API_URL = process.env.NEXT_PUBLIC_API_URL ?? 'http://localhost:4000/api/v1';
 
@@ -42,7 +45,7 @@ export default async function CareersPage({
           <li key={job.id}>
             <a
               href={`${basePath}/jobs/${job.id}${basePath ? `?basePath=${encodeURIComponent(basePath)}` : ''}`}
-              className="block border border-line p-5 hover:border-accent hover:bg-accentSoft/40 transition-colors"
+              className="block glass-panel rounded-2xl p-5 hover:border-accent hover:bg-accentSoft/40 transition-colors"
             >
               <div className="flex items-start justify-between gap-4">
                 <div>

@@ -29,7 +29,6 @@ export default function TeamSettingsPage() {
       await api.post('/users', {
         name: fd.get('name'),
         email: fd.get('email'),
-        password: fd.get('password'),
         role: fd.get('role'),
       }, token);
       setShowForm(false);
@@ -58,33 +57,33 @@ export default function TeamSettingsPage() {
         </div>
         <button
           onClick={() => setShowForm((s) => !s)}
-          className="text-sm font-medium bg-accent text-white px-4 py-2 hover:bg-accent/90"
+          className="text-sm font-medium bg-beacon-gradient text-white rounded-xl px-4 py-2 hover:opacity-90 shadow-sm shadow-accent/25 transition-opacity"
         >
           {showForm ? 'Cancel' : 'Invite reviewer'}
         </button>
       </div>
 
       {showForm && (
-        <form onSubmit={handleInvite} className="border border-line p-5 mb-6 grid sm:grid-cols-2 gap-4">
+        <form onSubmit={handleInvite} className="glass-panel rounded-2xl p-5 mb-6 grid sm:grid-cols-2 gap-4">
           <Field label="Full name" name="name" required />
           <Field label="Email" name="email" type="email" required />
-          <Field label="Temporary password" name="password" type="password" required />          <div>
+          <div>
             <label className="block text-sm font-medium mb-1.5">Role</label>
-            <select name="role" defaultValue="REVIEWER" className="w-full border border-line px-3 py-2 text-sm focus:border-accent">
+            <select name="role" defaultValue="REVIEWER" className="w-full border border-line rounded-xl px-3.5 py-2.5 text-sm focus:border-accent focus:ring-2 focus:ring-accent/20 outline-none transition-shadow">
               <option value="REVIEWER">Reviewer</option>
               <option value="ADMIN">Admin</option>
             </select>
           </div>
           {error && <p role="alert" className="text-sm text-status-rejected sm:col-span-2">{error}</p>}
-          <p className="text-xs text-ink/40 sm:col-span-2 -mt-2">They'll be required to set their own password on first login.</p>
+          <p className="text-xs text-ink/40 sm:col-span-2 -mt-2">They&apos;ll receive an email with a temporary password and instructions to sign in. They&apos;ll be required to set their own password immediately after.</p>
           <button type="submit" disabled={submitting}
-                  className="self-start sm:col-span-2 text-sm font-medium bg-accent text-white px-4 py-2 hover:bg-accent/90 disabled:opacity-50">
+                  className="self-start sm:col-span-2 text-sm font-medium bg-beacon-gradient text-white rounded-xl px-4 py-2 hover:opacity-90 shadow-sm shadow-accent/25 transition-opacity disabled:opacity-50">
             {submitting ? 'Creating…' : 'Create account'}
           </button>
         </form>
       )}
 
-      <table className="w-full text-sm border border-line">
+      <table className="w-full text-sm glass-panel rounded-2xl overflow-hidden">
         <thead>
           <tr className="bg-lineSoft/60 border-b border-line text-left">
             <th className="font-mono text-[11px] uppercase tracking-wide text-ink/50 font-medium px-4 py-2.5">Name</th>
@@ -124,7 +123,7 @@ function Field({ label, name, type = 'text', required = false }: { label: string
   return (
     <div>
       <label className="block text-sm font-medium mb-1.5">{label}</label>
-      <input type={type} name={name} required={required} className="w-full border border-line px-3 py-2 text-sm focus:border-accent" />
+      <input type={type} name={name} required={required} className="w-full border border-line rounded-xl px-3.5 py-2.5 text-sm focus:border-accent focus:ring-2 focus:ring-accent/20 outline-none transition-shadow" />
     </div>
   );
 }

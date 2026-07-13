@@ -1,4 +1,4 @@
-# ATS Portal — Frontend
+# Beacon — Frontend
 
 One Next.js 14 app, two surfaces, split by auth:
 - `/` and `/jobs/[id]` — public, no login. Point your website careers page
