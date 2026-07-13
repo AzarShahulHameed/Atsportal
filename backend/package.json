@@ -1,5 +1,5 @@
 {
-  "name": "beacon-backend",
+  "name": "talentos-backend",
   "version": "1.0.0",
   "scripts": {
     "build": "nest build",

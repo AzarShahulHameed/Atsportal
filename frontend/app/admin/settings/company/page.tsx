@@ -82,9 +82,9 @@ export default function CompanySettingsPage() {
       <div className="glass-panel rounded-2xl p-6 mb-6">
         <h2 className="text-sm font-semibold uppercase tracking-wide text-ink/50 mb-4">Logo</h2>
         <div className="flex items-center gap-5">
-          <div className="w-16 h-16 border border-line flex items-center justify-center bg-lineSoft/30 shrink-0 overflow-hidden">
+          <div className="h-16 w-40 border border-line flex items-center justify-center bg-lineSoft/30 shrink-0 overflow-hidden p-2">
             {settings.logoUrl
-              ? <img src={settings.logoUrl} alt="Company logo" className="w-full h-full object-contain" />
+              ? <img src={settings.logoUrl} alt="Company logo" style={{ maxWidth: '100%', maxHeight: '100%', objectFit: 'contain' }} />
               : <span className="text-ink/30 text-xs font-mono">None</span>}
           </div>
           <div>

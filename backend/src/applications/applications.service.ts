@@ -183,6 +183,15 @@ export class ApplicationsService {
       );
     }
 
+    // Moving to INTERVIEW_SCHEDULED without a real date/time/location means
+    // the candidate's email goes out saying "To be confirmed" on all three —
+    // which reads as broken, not pending. Block the transition instead.
+    if (dto.status === 'INTERVIEW_SCHEDULED') {
+      if (!dto.interviewDate || !dto.interviewTime || !dto.interviewLocation) {
+        throw new BadRequestException('Interview date, time, and location are all required to schedule an interview.');
+      }
+    }
+
     const [createdEvent, updated] = await this.prisma.$transaction([
       this.prisma.statusEvent.create({
         data: {
@@ -223,5 +232,62 @@ export class ApplicationsService {
     );
 
     return updated;
+  }
+
+  // Editing an already-scheduled interview (reschedule) — separate from the
+  // status transition itself, since the application is already sitting at
+  // INTERVIEW_SCHEDULED and isn't moving anywhere. Updates the StatusEvent
+  // that recorded the original scheduling, and re-sends the email so the
+  // candidate actually sees the new date, not the old one.
+  async updateInterviewDetails(
+    id: string,
+    dto: { interviewDate: string; interviewLocation: string; interviewTime: string },
+    reviewerId: string,
+  ) {
+    const application = await this.prisma.application.findUnique({
+      where: { id },
+      include: { job: { include: { company: true } } },
+    });
+    if (!application) throw new NotFoundException('Application not found');
+    if (application.status !== 'INTERVIEW_SCHEDULED') {
+      throw new BadRequestException('This application is not currently at the Interview scheduled stage.');
+    }
+
+    const latestScheduling = await this.prisma.statusEvent.findFirst({
+      where: { applicationId: id, toStatus: 'INTERVIEW_SCHEDULED' },
+      orderBy: { createdAt: 'desc' },
+    });
+    if (!latestScheduling) throw new NotFoundException('No interview scheduling record found to update.');
+
+    const updatedEvent = await this.prisma.statusEvent.update({
+      where: { id: latestScheduling.id },
+      data: {
+        interviewDate: dto.interviewDate,
+        interviewTime: dto.interviewTime,
+        interviewLocation: dto.interviewLocation,
+        emailSent: false, // will flip back to true once the resend actually succeeds
+      },
+    });
+
+    const companyName = await this.resolveCompanyName(application.job.company?.name);
+
+    this.events.emit(
+      'application.status.changed',
+      new ApplicationStatusChangedEvent(
+        application.id,
+        updatedEvent.id,
+        application.email,
+        application.candidateName,
+        application.job.title,
+        companyName,
+        'INTERVIEW_SCHEDULED',
+        'INTERVIEW_SCHEDULED',
+        dto.interviewDate,
+        dto.interviewTime,
+        dto.interviewLocation,
+      ),
+    );
+
+    return { success: true };
   }
 }

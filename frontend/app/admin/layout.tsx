@@ -3,7 +3,7 @@
 import { useEffect, useState } from 'react';
 import { usePathname, useRouter } from 'next/navigation';
 import { clearSession, getSessionUser, SessionUser } from '@/lib/auth';
-import { BeaconLogo } from '@/components/BeaconLogo';
+import { AppLogo } from '@/components/AppLogo';
 import { TopLoadingBar } from '@/components/TopLoadingBar';
 
 const NAV = [
@@ -53,8 +53,8 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
 
       <aside className="w-60 shrink-0 glass-panel border-r flex flex-col m-3 mr-0 rounded-2xl">
         <div className="h-16 flex items-center gap-2.5 px-5">
-          <BeaconLogo size={26} />
-          <span className="text-base font-extrabold tracking-tight text-ink">Beacon</span>
+          <AppLogo size={26} />
+          <span className="text-base font-extrabold tracking-tight text-ink">TalentOS</span>
         </div>
         <nav className="flex-1 py-2 px-3">
           {NAV.map((item) => {

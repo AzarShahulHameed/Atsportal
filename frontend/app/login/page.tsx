@@ -4,7 +4,7 @@ import { useState, FormEvent, Suspense } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
 import { api, ApiError } from '@/lib/api';
 import { setSession } from '@/lib/auth';
-import { BeaconLogo } from '@/components/BeaconLogo';
+import { AppLogo } from '@/components/AppLogo';
 
 function LoginForm() {
   const router = useRouter();
@@ -40,8 +40,8 @@ function LoginForm() {
     <main className="min-h-screen flex items-center justify-center px-6">
       <div className="w-full max-w-sm glass-panel rounded-3xl p-8 shadow-xl shadow-accent/5">
         <div className="flex items-center gap-2.5 mb-8">
-          <BeaconLogo size={30} />
-          <span className="text-lg font-extrabold tracking-tight text-ink">Beacon</span>
+          <AppLogo size={30} />
+          <span className="text-lg font-extrabold tracking-tight text-ink">TalentOS</span>
         </div>
         <h1 className="text-xl font-semibold mb-1">Welcome back</h1>
         <p className="text-sm text-ink/50 mb-8">Sign in to review applications.</p>

@@ -5,6 +5,7 @@ import { api } from '@/lib/api';
 import { ensureFreshToken } from '@/lib/auth';
 import { Application, ApplicationStatus, Job } from '@/lib/api';
 import { StatusBadge } from '@/components/StatusBadge';
+import { SkeletonTable } from '@/components/Skeleton';
 
 const STATUS_FILTERS: { label: string; value: ApplicationStatus | 'ALL' }[] = [
   { label: 'All', value: 'ALL' },
@@ -114,7 +115,7 @@ export default function AdminApplicationsPage() {
         ))}
       </div>
 
-      {loading && <p className="text-sm text-ink/40 py-8">Loading…</p>}
+      {loading && <SkeletonTable rows={8} />}
 
       {!loading && data && data.items.length === 0 && (
         <div className="border border-dashed border-line py-16 text-center text-sm text-ink/40">

@@ -2,7 +2,7 @@ import type { Metadata } from 'next';
 import './globals.css';
 
 export const metadata: Metadata = {
-  title: 'Beacon',
+  title: 'TalentOS',
   description: 'Applicant tracking, done right.',
 };
 

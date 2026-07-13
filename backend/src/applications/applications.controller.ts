@@ -20,6 +20,7 @@ import { Role } from '@prisma/client';
 import { ApplicationsService } from './applications.service';
 import { CreateApplicationDto } from './dto/create-application.dto';
 import { UpdateStatusDto } from './dto/update-status.dto';
+import { UpdateInterviewDetailsDto } from './dto/update-interview-details.dto';
 import { QueryApplicationsDto } from './dto/query-applications.dto';
 
 @Controller('applications')
@@ -72,5 +73,12 @@ export class ApplicationsController {
   @Patch(':id/status')
   updateStatus(@Param('id') id: string, @Body() dto: UpdateStatusDto, @Req() req: any) {
     return this.applicationsService.updateStatus(id, dto, req.user.id);
+  }
+
+  @UseGuards(JwtAuthGuard, RolesGuard)
+  @Roles(Role.ADMIN, Role.REVIEWER)
+  @Patch(':id/interview-details')
+  updateInterviewDetails(@Param('id') id: string, @Body() dto: UpdateInterviewDetailsDto, @Req() req: any) {
+    return this.applicationsService.updateInterviewDetails(id, dto, req.user.id);
   }
 }

@@ -5,6 +5,7 @@ import { api } from '@/lib/api';
 import { ensureFreshToken, getSessionUser } from '@/lib/auth';
 import { ApplicationStatus, Application } from '@/lib/api';
 import { StatusBadge } from '@/components/StatusBadge';
+import { SkeletonCards, SkeletonTable } from '@/components/Skeleton';
 
 interface Stats {
   total: number;
@@ -48,7 +49,12 @@ export default function DashboardPage() {
         <p className="text-sm text-ink/50 mt-1">Here&apos;s where things stand across your open roles.</p>
       </div>
 
-      {!stats && <p className="text-sm text-ink/40">Loading…</p>}
+      {!stats && (
+        <>
+          <SkeletonCards />
+          <div className="mt-8"><SkeletonTable rows={4} /></div>
+        </>
+      )}
 
       {stats && (
         <>

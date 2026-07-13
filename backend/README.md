@@ -1,4 +1,4 @@
-# Beacon — Backend
+# TalentOS — Backend
 
 ## Setup
 ```

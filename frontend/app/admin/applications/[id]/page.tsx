@@ -7,9 +7,6 @@ import { StatusBadge } from '@/components/StatusBadge';
 import { PipelineStepper } from '@/components/PipelineStepper';
 
 // Mirrors ALLOWED_TRANSITIONS in applications.service.ts exactly.
-// If you change the backend state machine, change it here too — the
-// backend still enforces it either way, but a mismatched UI just means
-// a reviewer hits a confusing 400 instead of never seeing the invalid option.
 const ALLOWED_TRANSITIONS: Record<ApplicationStatus, ApplicationStatus[]> = {
   SUBMITTED: ['UNDER_REVIEW', 'REJECTED'],
   UNDER_REVIEW: ['SHORTLISTED', 'REJECTED'],
@@ -31,6 +28,16 @@ export default function ApplicationDetailPage({ params }: { params: { id: string
   const [updating, setUpdating] = useState<ApplicationStatus | null>(null);
   const [error, setError] = useState<string | null>(null);
 
+  const [interviewDate, setInterviewDate] = useState('');
+  const [interviewTime, setInterviewTime] = useState('');
+  const [interviewLocation, setInterviewLocation] = useState('');
+
+  const [editingInterview, setEditingInterview] = useState(false);
+  const [editDate, setEditDate] = useState('');
+  const [editTime, setEditTime] = useState('');
+  const [editLocation, setEditLocation] = useState('');
+  const [savingEdit, setSavingEdit] = useState(false);
+
   const load = useCallback(async () => {
     const token = await ensureFreshToken();
     if (!token) { window.location.href = '/login'; return; }
@@ -40,12 +47,43 @@ export default function ApplicationDetailPage({ params }: { params: { id: string
 
   useEffect(() => { load(); }, [load]);
 
-  const [interviewDate, setInterviewDate] = useState('');
-  const [interviewTime, setInterviewTime] = useState('');
-  const [interviewLocation, setInterviewLocation] = useState('');
+  // Find the interview scheduling record so an already-scheduled interview
+  // can be edited/rescheduled, not just set once.
+  const latestScheduling = app?.statusHistory
+    ?.filter((e) => e.toStatus === 'INTERVIEW_SCHEDULED')
+    .sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime())[0];
+
+  function openEditInterview() {
+    setEditDate(latestScheduling?.interviewDate ?? '');
+    setEditTime(latestScheduling?.interviewTime ?? '');
+    setEditLocation(latestScheduling?.interviewLocation ?? '');
+    setEditingInterview(true);
+  }
+
+  async function saveInterviewEdit() {
+    setSavingEdit(true);
+    setError(null);
+    try {
+      const token = await ensureFreshToken();
+      if (!token) { window.location.href = '/login'; return; }
+      await api.patch(`/applications/${params.id}/interview-details`, {
+        interviewDate: editDate, interviewTime: editTime, interviewLocation: editLocation,
+      }, token);
+      setEditingInterview(false);
+      await load();
+    } catch (err) {
+      setError(err instanceof ApiError ? err.message : 'Could not update interview details.');
+    } finally {
+      setSavingEdit(false);
+    }
+  }
 
   async function handleTransition(status: ApplicationStatus) {
     setError(null);
+    if (status === 'INTERVIEW_SCHEDULED' && (!interviewDate || !interviewTime || !interviewLocation)) {
+      setError('Interview date, time, and location are all required before scheduling.');
+      return;
+    }
     setUpdating(status);
     try {
       const token = await ensureFreshToken();
@@ -54,16 +92,10 @@ export default function ApplicationDetailPage({ params }: { params: { id: string
       await api.patch(`/applications/${params.id}/status`, {
         status,
         note: note || undefined,
-        ...(isSchedulingInterview ? {
-          interviewDate: interviewDate || undefined,
-          interviewTime: interviewTime || undefined,
-          interviewLocation: interviewLocation || undefined,
-        } : {}),
+        ...(isSchedulingInterview ? { interviewDate, interviewTime, interviewLocation } : {}),
       }, token);
       setNote('');
-      setInterviewDate('');
-      setInterviewTime('');
-      setInterviewLocation('');
+      setInterviewDate(''); setInterviewTime(''); setInterviewLocation('');
       await load();
     } catch (err) {
       setError(err instanceof ApiError ? err.message : 'Could not update status.');
@@ -72,62 +104,79 @@ export default function ApplicationDetailPage({ params }: { params: { id: string
     }
   }
 
-  if (!app) return <p className="text-sm text-ink/50">Loading…</p>;
+  if (!app) {
+    return (
+      <div className="flex flex-col gap-4">
+        <div className="glass-panel rounded-2xl p-6">
+          <div className="animate-pulse h-6 w-48 bg-lineSoft rounded mb-2" />
+          <div className="animate-pulse h-4 w-72 bg-lineSoft rounded" />
+        </div>
+        <div className="glass-panel rounded-2xl p-6 h-40 animate-pulse" />
+        <div className="glass-panel rounded-2xl p-6 h-32 animate-pulse" />
+      </div>
+    );
+  }
 
   const nextOptions = ALLOWED_TRANSITIONS[app.status];
+  const showInterviewCard = app.status === 'INTERVIEW_SCHEDULED' || (latestScheduling && ['OFFERED', 'HIRED'].includes(app.status));
 
   return (
     <div>
-      <a href="/admin" className="text-sm text-accent font-medium hover:underline">&larr; All applications</a>
+      <a href="/admin/applications" className="text-sm text-accent font-medium hover:underline">&larr; All applications</a>
 
-      <header className="mt-6 mb-8 flex items-start justify-between gap-4">
-        <div>
-          <h1 className="text-2xl font-semibold tracking-tight">{app.candidateName}</h1>
-          <p className="text-ink/60 mt-1">
-            {app.job.title} · {app.email} {app.phone ? `· ${app.phone}` : ''}
-          </p>
+      <header className="mt-6 mb-8 glass-panel rounded-2xl p-6 flex items-start justify-between gap-4">
+        <div className="flex items-start gap-4">
+          <div className="w-12 h-12 rounded-full bg-beacon-gradient text-white flex items-center justify-center text-lg font-bold shrink-0 shadow-sm">
+            {app.candidateName.slice(0, 1).toUpperCase()}
+          </div>
+          <div>
+            <h1 className="text-2xl font-bold tracking-tight">{app.candidateName}</h1>
+            <p className="text-ink/60 mt-1">
+              {app.job.title} · {app.email} {app.phone ? `· ${app.phone}` : ''}
+            </p>
+          </div>
         </div>
         <StatusBadge status={app.status} />
       </header>
 
-      <div className="mb-10">
+      <div className="glass-panel rounded-2xl p-6 mb-6">
         <PipelineStepper status={app.status} />
       </div>
 
-      <div className="grid sm:grid-cols-2 gap-8 mb-10">
-        <div>
+      <div className="grid sm:grid-cols-2 gap-6 mb-6">
+        <div className="glass-panel rounded-2xl p-6">
           <h2 className="text-sm font-semibold uppercase tracking-wide text-ink/50 mb-3">Documents</h2>
           <div className="flex flex-col gap-2">
             <a href={app.resumeUrl} target="_blank" rel="noreferrer"
-               className="text-sm text-accent hover:underline">View resume &rarr;</a>
+               className="text-sm text-accent hover:underline font-medium">View resume &rarr;</a>
             {app.coverLetterUrl && (
               <a href={app.coverLetterUrl} target="_blank" rel="noreferrer"
-                 className="text-sm text-accent hover:underline">View cover letter &rarr;</a>
+                 className="text-sm text-accent hover:underline font-medium">View cover letter &rarr;</a>
             )}
           </div>
           {app.coverLetterText && (
-            <div className="mt-4 bg-accentSoft/40 p-4 text-sm text-ink/80 whitespace-pre-wrap">
+            <div className="mt-4 bg-accentSoft/40 rounded-xl p-4 text-sm text-ink/80 whitespace-pre-wrap">
               {app.coverLetterText}
             </div>
           )}
         </div>
 
-        <div>
+        <div className="glass-panel rounded-2xl p-6">
           <h2 className="text-sm font-semibold uppercase tracking-wide text-ink/50 mb-3">Application info</h2>
-          <dl className="text-sm flex flex-col gap-1.5">
-            <div className="flex justify-between"><dt className="text-ink/50">Entity</dt><dd>{app.job.company?.name ?? '—'}</dd></div>
-            <div className="flex justify-between"><dt className="text-ink/50">Region</dt><dd>{app.job.region}</dd></div>
-            <div className="flex justify-between"><dt className="text-ink/50">Source</dt><dd className="capitalize">{app.source}</dd></div>
-            <div className="flex justify-between"><dt className="text-ink/50">Applied</dt><dd>{new Date(app.createdAt).toLocaleDateString()}</dd></div>
-            {app.reviewer && <div className="flex justify-between"><dt className="text-ink/50">Reviewer</dt><dd>{app.reviewer.name}</dd></div>}
+          <dl className="text-sm flex flex-col gap-2">
+            <Row label="Entity" value={app.job.company?.name ?? '—'} />
+            <Row label="Region" value={app.job.region} />
+            <Row label="Source" value={app.source} capitalize />
+            <Row label="Applied" value={new Date(app.createdAt).toLocaleDateString()} />
+            {app.reviewer && <Row label="Reviewer" value={app.reviewer.name} />}
           </dl>
         </div>
       </div>
 
       {(app.nationality || app.currentLocation || app.currentRole || app.yearsExperience || app.linkedinUrl || app.portfolioUrl) && (
-        <div className="mb-10">
+        <div className="glass-panel rounded-2xl p-6 mb-6">
           <h2 className="text-sm font-semibold uppercase tracking-wide text-ink/50 mb-3">Candidate profile</h2>
-          <dl className="grid sm:grid-cols-2 gap-x-8 gap-y-2 text-sm glass-panel rounded-2xl p-4">
+          <dl className="grid sm:grid-cols-2 gap-x-8 gap-y-2 text-sm">
             {app.nationality && <Row label="Nationality" value={app.nationality} />}
             {app.currentLocation && <Row label="Current location" value={app.currentLocation} />}
             {app.currentRole && <Row label="Current role" value={app.currentRole} />}
@@ -138,14 +187,62 @@ export default function ApplicationDetailPage({ params }: { params: { id: string
         </div>
       )}
 
+      {showInterviewCard && latestScheduling && (
+        <div className="glass-panel rounded-2xl p-6 mb-6">
+          <div className="flex items-center justify-between mb-3">
+            <h2 className="text-sm font-semibold uppercase tracking-wide text-ink/50">Interview</h2>
+            {app.status === 'INTERVIEW_SCHEDULED' && !editingInterview && (
+              <button onClick={openEditInterview} className="text-xs text-accent hover:underline font-medium">Reschedule</button>
+            )}
+          </div>
+          {editingInterview ? (
+            <div>
+              <div className="grid sm:grid-cols-3 gap-3 mb-3">
+                <div>
+                  <label className="block text-xs font-medium mb-1">Date</label>
+                  <input type="date" value={editDate} onChange={(e) => setEditDate(e.target.value)}
+                         className="w-full border border-line rounded-xl px-3.5 py-2.5 text-sm bg-white focus:border-accent focus:ring-2 focus:ring-accent/20 outline-none" />
+                </div>
+                <div>
+                  <label className="block text-xs font-medium mb-1">Time</label>
+                  <input type="time" value={editTime} onChange={(e) => setEditTime(e.target.value)}
+                         className="w-full border border-line rounded-xl px-3.5 py-2.5 text-sm bg-white focus:border-accent focus:ring-2 focus:ring-accent/20 outline-none" />
+                </div>
+                <div>
+                  <label className="block text-xs font-medium mb-1">Location / link</label>
+                  <input type="text" value={editLocation} onChange={(e) => setEditLocation(e.target.value)}
+                         className="w-full border border-line rounded-xl px-3.5 py-2.5 text-sm bg-white focus:border-accent focus:ring-2 focus:ring-accent/20 outline-none" />
+                </div>
+              </div>
+              {error && <p role="alert" className="text-sm text-status-rejected mb-3">{error}</p>}
+              <div className="flex gap-2">
+                <button onClick={saveInterviewEdit} disabled={savingEdit}
+                        className="bg-beacon-gradient text-white rounded-xl px-4 py-2 text-sm font-medium hover:opacity-90 disabled:opacity-50 shadow-sm shadow-accent/25">
+                  {savingEdit ? 'Saving…' : 'Save & notify candidate'}
+                </button>
+                <button onClick={() => setEditingInterview(false)} className="px-4 py-2 text-sm font-medium border border-line rounded-xl hover:border-accent">
+                  Cancel
+                </button>
+              </div>
+            </div>
+          ) : (
+            <dl className="grid sm:grid-cols-3 gap-x-8 gap-y-2 text-sm">
+              <Row label="Date" value={latestScheduling.interviewDate || '—'} />
+              <Row label="Time" value={latestScheduling.interviewTime || '—'} />
+              <Row label="Location" value={latestScheduling.interviewLocation || '—'} />
+            </dl>
+          )}
+        </div>
+      )}
+
       {nextOptions.length > 0 && (
-        <div className="glass-panel rounded-2xl p-5 mb-10">
+        <div className="glass-panel rounded-2xl p-6 mb-6">
           <h2 className="text-sm font-semibold uppercase tracking-wide text-ink/50 mb-3">Move this application</h2>
 
           {nextOptions.includes('INTERVIEW_SCHEDULED') && (
-            <div className="border border-line bg-lineSoft/20 p-4 mb-3">
+            <div className="border border-line rounded-xl bg-lineSoft/20 p-4 mb-3">
               <p className="text-xs font-mono uppercase tracking-wide text-ink/50 mb-2">
-                Interview details — required for the candidate&apos;s email if moving to Interview scheduled
+                Interview details — required to schedule
               </p>
               <div className="grid sm:grid-cols-3 gap-3">
                 <div>
@@ -183,10 +280,10 @@ export default function ApplicationDetailPage({ params }: { params: { id: string
                 onClick={() => handleTransition(status)}
                 disabled={updating !== null}
                 className={[
-                  'text-sm font-medium px-4 py-2 disabled:opacity-50',
+                  'text-sm font-medium px-4 py-2 rounded-xl disabled:opacity-50',
                   status === 'REJECTED'
                     ? 'border border-status-rejected text-status-rejected hover:bg-status-rejected/5'
-                    : 'bg-beacon-gradient text-white rounded-xl hover:opacity-90 shadow-sm shadow-accent/25 transition-opacity',
+                    : 'bg-beacon-gradient text-white hover:opacity-90 shadow-sm shadow-accent/25 transition-opacity',
                 ].join(' ')}
               >
                 {updating === status ? 'Updating…' : `Move to: ${STATUS_LABEL[status]}`}
@@ -196,11 +293,11 @@ export default function ApplicationDetailPage({ params }: { params: { id: string
         </div>
       )}
 
-      <div>
-        <h2 className="text-sm font-semibold uppercase tracking-wide text-ink/50 mb-3">Audit log</h2>
-        <ol className="flex flex-col gap-3">
+      <div className="glass-panel rounded-2xl p-6">
+        <h2 className="text-sm font-semibold uppercase tracking-wide text-ink/50 mb-4">Audit log</h2>
+        <ol className="flex flex-col gap-4">
           {app.statusHistory?.map((event) => (
-            <li key={event.id} className="text-sm border-l-2 border-line pl-4">
+            <li key={event.id} className="text-sm border-l-2 border-accent/30 pl-4">
               <p>
                 <span className="font-medium">{event.changedBy.name}</span>
                 {' '}moved this to <span className="font-medium">{STATUS_LABEL[event.toStatus]}</span>
@@ -215,13 +312,13 @@ export default function ApplicationDetailPage({ params }: { params: { id: string
   );
 }
 
-function Row({ label, value, href }: { label: string; value: string; href?: string }) {
+function Row({ label, value, href, capitalize }: { label: string; value: string; href?: string; capitalize?: boolean }) {
   return (
     <div className="flex justify-between gap-4">
       <dt className="text-ink/50 shrink-0">{label}</dt>
       {href
         ? <dd className="text-accent truncate"><a href={href} target="_blank" rel="noreferrer" className="hover:underline">{value}</a></dd>
-        : <dd className="truncate">{value}</dd>}
+        : <dd className={`truncate ${capitalize ? 'capitalize' : ''}`}>{value}</dd>}
     </div>
   );
 }

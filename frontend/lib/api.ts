@@ -99,6 +99,9 @@ export interface Application {
     fromStatus: ApplicationStatus | null;
     toStatus: ApplicationStatus;
     note: string | null;
+    interviewDate: string | null;
+    interviewTime: string | null;
+    interviewLocation: string | null;
     createdAt: string;
     changedBy: { name: string };
   }[];

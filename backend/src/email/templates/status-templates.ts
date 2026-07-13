@@ -70,7 +70,7 @@ export function substitutePlaceholders(text: string, vars: Record<string, string
 // what makes automated emails look like phishing rather than a real offer.
 export function wrapEmailBody(companyName: string, bodyHtml: string, logoUrl?: string | null): string {
   const headerContent = logoUrl
-    ? `<img src="${logoUrl}" alt="${companyName}" style="height:32px;max-width:220px;object-fit:contain;display:block;" />`
+    ? `<img src="${logoUrl}" alt="${companyName}" width="140" height="40" style="height:40px;width:auto;max-width:220px;object-fit:contain;display:block;border:0;" />`
     : `<span style="font-size:18px;font-weight:700;">${companyName}</span>`;
 
   return `
